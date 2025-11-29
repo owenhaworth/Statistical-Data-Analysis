@@ -1,0 +1,607 @@
+---
+title: 'STA442 - Assignment #4'
+author: "Owen Haworth"
+date: "05/04/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message = FALSE}
+library(faraway) # Load faraway package to use data
+```
+
+# Q1.
+## a.
+```{r}
+# Creating boxplot for the processes (treatments):
+plot(yield ~ treat, penicillin, xlab = "Process", ylab = "Yield",
+     main = "Production of Penicillin for the 4 Processes")
+
+# Creating boxplot for the blends (blocks):
+plot(yield ~ blend, penicillin, xlab = "Blend", ylab = "Yield",
+     main = "Production of Penicillin for the 5 Blends")
+
+# Creating interaction plot with processes (treatments) as the x-axis:
+with(penicillin, interaction.plot(treat, blend, yield, xlab = "Process", ylab = "Yield",
+                                  main = "Production of Penicillin by the 4 Processes"))
+
+# Creating interaction plot with blends (blocks) as the x-axis:
+with(penicillin, interaction.plot(blend, treat, yield, xlab = "Blend", ylab = "Yield",
+                                  main = "Production of Penicillin by the 5 Blends"))
+```
+
+## b.
+```{r}
+# Fitting linear model:
+penicillin.lm <- lm(yield ~ treat + blend, data = penicillin)
+summary(penicillin.lm) # Get results
+
+# Testing each variable with respect to the full linear model:
+drop1(penicillin.lm, test = "F")
+```
+
+The treatment effect has a p-value of 0.33866 (large p-value), which is greater
+than the 5% significance level (alpha = 0.05) so therefore there is strong evidence
+suggesting that the treatment effect is not statistically significant. Hence, I
+conclude that there is not a significant difference between the treatments.
+
+## c.
+```{r}
+# Testing each variable with respect to the full linear model:
+drop1(penicillin.lm, test = "F")
+
+# Fitting linear model without the blend (blocking) effect:
+penicillin.lm.crd <- lm(yield ~ treat, data = penicillin)
+summary(penicillin.lm.crd) # Get results
+
+summary(penicillin.lm.crd)$sig # Get variance for completely randomized design
+
+summary(penicillin.lm)$sig # Get variance for randomized complete block design
+
+(5.533986/4.339739)^2 # Computing relative efficiency
+```
+
+The blend (blocking) effect has a p-value of 0.04075 (small p-value), which is less
+than the 5% significance level (alpha = 0.05) so therefore I conclude that the
+blend effect is statistically significant and hence there is a difference between
+the blends.
+
+Using blends in the design and modeling improved the outcome because the randomized
+complete block design is 1.626106 times more efficient than the completely randomized
+design, which means the precision of the outcome (yield (production of penicillin))
+increased by approximately 63%. The efficiency that was gained by the blocked design
+is approximately 63% (blends included in the design and modeling). Therefore, the
+completely randomized design (blends not included in the design and modeling) needs
+about 63% more observations to obtain the same level of precision as the blocked
+design (blends included in the design and modeling), which is why using blends in
+the design and modeling improved the outcome (yield (production of penicillin)).
+
+## d.
+```{r, message = FALSE, warning = FALSE}
+# Creating normal Q-Q plot of residuals:
+qqnorm(residuals(penicillin.lm))
+qqline(residuals(penicillin.lm)) # Adding Q-Q line
+
+# Creating residuals vs. fitted values plot:
+plot(fitted(penicillin.lm), residuals(penicillin.lm), xlab = "Fitted",
+     ylab = "Residuals", main = "Residuals vs. Fitted Values")
+abline(h=0) # Adding horizontal line at 0
+
+# Shapiro-Wilk normality test if the residuals are normal:
+shapiro.test(residuals(penicillin.lm))
+
+# Test for a difference in the variance:
+penicillin$residuals <- sqrt(abs(residuals(penicillin.lm))) # Square-root of residuals
+penicillin.lm.var <- lm(residuals ~ treat + blend, penicillin) # Creating new linear model
+anova(penicillin.lm.var) # ANOVA test
+
+library(lmtest) # Load lmtest library to use the dwtest function
+
+# Durbin-Watson test for correlated errors:
+dwtest(yield ~ treat + blend, data = penicillin)
+```
+
+When looking at the normal Q-Q plot, most of the residuals approximately lie on
+the Q-Q line so therefore the residuals are approximately normal. Also, the p-value
+from the Shapiro-Wilk normality test is 0.3743 (large p-value), which is greater
+than the 5% significance level (alpha = 0.05) so therefore I do not reject the null
+hypothesis that the residuals are normal and conclude that there is strong evidence
+suggesting the residuals are normal. Hence, the normality assumption has been satisfied.
+
+In addition, in the residuals vs. fitted values plot the residuals seem to be evenly
+spread out around the horizontal line at 0 and form a horizontal band around the
+horizontal line at 0, which suggests that the error variances are homogeneous to
+one another. In addition, the p-value from the ANOVA test for the treatments is
+0.7654 and the p-value for the blends is 0.3802, both of the p-values are large,
+which allows for the conclusion that there is no strong evidence against of constant
+variance for both the treatments and blends. Hence, the assumption of constant variance
+is satisfied.
+
+There is no symmetry in the residuals vs. fitted values plot, which suggests that
+the residuals are independent of one another. The p-value obtained from the
+Durbin-Watson test is 0.6853 (large p-value), which is greater than the 5% significance
+level (alpha = 0.05) so therefore I do not reject the null hypothesis that the errors
+are uncorrelated and conclude that the there is strong evidence of the errors being
+uncorrelated. Hence, the independence assumption is satisfied.
+
+# Q2.
+## a.
+```{r, message = FALSE}
+library(ggplot2) # Loading ggplot2 library to use ggplot function to make plots
+
+# Creating Boxplots of butterfat data:
+# Boxplot of Butterfat with Breed as the x-axis
+plot(Butterfat ~ Breed, butterfat, main = "Butterfat Data Plot by Breed")
+# Boxplot Butterfat with Age as the x-axis
+plot(Butterfat ~ Age, butterfat, main = "Butterfat Data Plot by Age")
+
+# Simple plots:
+# Plotting Butterfat with Breed as the x-axis
+with(butterfat, interaction.plot(Breed, Age, Butterfat, ylab = "Butterfat",
+                                 main = "Butterfat Data Plot by Breed"))
+# Plotting Butterfat with Age as the x-axis
+with(butterfat, interaction.plot(Age, Breed, Butterfat, ylab = "Butterfat",
+                                 main = "Butterfat Data Plot by Age"))
+
+# Complex plots:
+# Plotting Butterfat with Breed as the x-axis and with some horizontal jittering
+ggplot(butterfat, aes(x = Breed, y = Butterfat, shape = Age)) +
+  geom_point(position = position_jitter(width = 0.1)) +
+  stat_summary(fun = "mean", geom = "line", aes(group = Age, linetype = Age)) +
+  theme(legend.position = "top", legend.direction = "horizontal") +
+  ggtitle("Butterfat Data Plot by Breed")
+
+# Plotting Butterfat with Age as the x-axis and with some horizontal jittering
+ggplot(butterfat, aes(x = Age, y = Butterfat, shape = Breed)) +
+  geom_point(position = position_jitter(width = 0.1)) +
+  stat_summary(fun = "mean", geom = "line", aes(group = Breed, linetype = Breed)) +
+  theme(legend.position = "top", legend.direction = "horizontal") +
+  ggtitle("Butterfat Data Plot by Age")
+```
+
+## b.
+```{r}
+# Fitting linear model:
+butterfat.lm <- lm(Butterfat ~ Breed*Age, data = butterfat)
+summary(butterfat.lm) # Get results
+
+# ANOVA test if the interaction effect is significant:
+anova(butterfat.lm)
+```
+
+The p-value obtained for the interaction term between breed and age from the ANOVA
+test is 0.5658 (large p-value), which is greater than the 5% significance level
+(alpha = 0.05) so therefore there is a significant interaction effect between breed
+and age. Hence, there is an interaction between breed and age.
+
+## c.
+```{r}
+# Fitting new linear model without the interaction term between breed and age:
+butterfat.lm2 <- lm(Butterfat ~ Breed + Age, data = butterfat)
+summary(butterfat.lm2) # Get results
+
+# ANOVA test if there is a statistically significant difference for breeds and for ages:
+anova(butterfat.lm2)
+
+# Computing Tukey's HSD 95% Confidence Intervals for Breed and Age:
+TukeyHSD(aov(Butterfat ~ Breed + Age, butterfat))
+```
+
+The p-value obtained from the ANOVA test for Breed is <2e-16 (small p-value),
+which is less than the 5% significance level (alpha = 0.05) so therefore I reject
+the null hypothesis that all breeds have equal mean butterfat and conclude that
+there is a statistically significant difference between breeds.
+
+The pairwise differences that are not statistically significant is only Jersey and
+Guernsey because its corresponding confidence interval contains 0 and also its
+corresponding p-value (p-value = 0.0752825 is large) is greater than the 5%
+significance level (alpha = 0.05). The rest of the pairwise differences are
+statistically significant, which are Canadian and Ayrshire, Guernsey and Ayrshire,
+Holstein-Fresian and Ayrshire, Jersey and Ayrshire, Guernsey and Canadian,
+Holstein-Fresian and Canadian, Jersey and Canadian, Holstein-Fresian and Guernsey,
+and Jersey and Holstein-Fresian.
+
+The p-value obtained from the ANOVA test for Age is 0.2094 (large p-value),
+which is greater than the 5% significance level (alpha = 0.05) so therefore I do
+not reject the null hypothesis that all ages have equal mean butterfat and conclude
+that there is not a statistically significant difference between ages.
+
+The pairwise difference Mature and 2year is not statistically significant because
+its corresponding confidence interval contains 0 and also its corresponding p-value
+(p-value = 0.2093695 is large) is greater than the 5% significance level (alpha = 0.05).
+
+## d.
+```{r}
+# Fitting the new chosen linear model without the Age predictor:
+butterfat.lm3 <- lm(Butterfat ~ Breed, data = butterfat)
+summary(butterfat.lm3) # Get results
+
+# Creating normal Q-Q plot of residuals:
+qqnorm(residuals(butterfat.lm3))
+qqline(residuals(butterfat.lm3)) # Adding Q-Q line
+
+# Creating residuals vs. fitted values plot:
+plot(fitted(butterfat.lm3), residuals(butterfat.lm3), xlab = "Fitted",
+     ylab = "Residuals", main = "Residuals vs. Fitted Values")
+abline(h=0) # Adding horizontal line at 0
+
+# Creating boxplot of residuals for the breeds:
+plot(residuals(butterfat.lm3) ~ Breed, butterfat, ylab = "Residuals",
+     main = "Butterfat Content of Milk Residuals from 5 Different Breeds")
+
+# Shapiro-Wilk normality test if the residuals are normal:
+shapiro.test(residuals(butterfat.lm3))
+
+# Test for a difference in the variance
+butterfat$residuals <- sqrt(abs(residuals(butterfat.lm3))) # Square-root of residuals
+butterfat.lm3.var <- lm(residuals ~ Breed, butterfat) # Creating new linear model
+anova(butterfat.lm3.var) # ANOVA test
+
+# Bartlett test:
+bartlett.test(Butterfat ~ Breed, butterfat)
+
+# Durbin-Watson test for correlated errors:
+dwtest(Butterfat ~ Breed, data = butterfat)
+
+# Fitting the new linear model with log transformation:
+butterfat.lm4 <- lm(log(Butterfat) ~ Breed, data = butterfat)
+summary(butterfat.lm4) # Get results
+
+# Creating normal Q-Q plot of residuals:
+qqnorm(residuals(butterfat.lm4))
+qqline(residuals(butterfat.lm4)) # Adding Q-Q line
+
+# Creating residuals vs. fitted values plot:
+plot(fitted(butterfat.lm4), residuals(butterfat.lm4), xlab = "Fitted",
+     ylab = "Residuals", main = "Residuals vs. Fitted Values")
+abline(h=0) # Adding horizontal line at 0
+
+# Creating boxplot of residuals for the breeds:
+plot(residuals(butterfat.lm4) ~ Breed, butterfat, ylab = "Residuals",
+     main = "Butterfat Content of Milk Residuals from 5 Different Breeds")
+```
+
+When looking at the boxplots of the different breeds, the Holstein-Fresian has 1
+outlier, whereas the other breeds (Ayrshire, Canadian, Guernsey, and Jersey)
+have no outliers. The median for the Holstein-Fresian breed is close to its lower
+quartile. There is positive skewness for the breed Holstein-Fresian, and somewhat
+negative skewness for the breed Ayrshire. This suggests that there is a lack of
+normality in the data. Also, the equality of variance between the breeds does not
+seem to be satisfied.
+
+When looking at the normal Q-Q plot, most of the residuals approximately lie on
+the Q-Q line, but some of the residuals fall off of the Q-Q line near the end,
+which suggests the errors are short-tailed. Also, the p-value from the Shapiro-Wilk
+normality test is 0.01571 (small p-value), which is less than the 5% significance
+level (alpha = 0.05) so therefore I reject the null hypothesis that the residuals
+are normal and conclude that there is strong evidence suggesting the residuals
+are not normal. Hence, the normality assumption has not been met.
+
+In addition, in the residuals vs. fitted values plot the residuals seem to not be
+evenly spread out around the horizontal line at 0 and do not form a horizontal band
+around the horizontal line at 0, which suggests that the error variances are not
+homogeneous to one another. Also, in the residuals vs. fitted values plot the variation
+is increasing as the response increases. In addition, the p-value from the ANOVA
+test for Breed is 0.01479 and the p-value from the Bartlett test is 0.0004455, both
+the p-values are small, which allows for the conclusion that there is strong evidence
+of non-constant variance. Hence, the assumption of constant variance is not satisfied.
+
+There is no symmetry in the residuals vs. fitted values plot, which suggests that
+the residuals are independent of one another. The p-value obtained from the
+Durbin-Watson test is 0.4996 (large p-value), which is greater than the 5% significance
+level (alpha = 0.05) so therefore I do not reject the null hypothesis that the errors
+are uncorrelated and conclude that the there is strong evidence of the errors being
+uncorrelated. Hence, the independence assumption is satisfied.
+
+All together this suggests that a transformation of the response is likely needed.
+Hence, a log transformation of the response could be used. After using the log
+transformation on the response, from the new Q-Q plot the normality assumption seems
+to be met since most of the residuals lie on the Q-Q line and the constant variance
+assumption seems to be met since the residuals form a horizontal band around the
+horizontal line at 0 in the new residuals vs. fitted values plot. Also, there is
+no symmetry in the residuals vs. fitted values plot, which suggests that the residuals
+are independent of one another. Hence, the assumptions have been meant under the
+log transformation of the response.
+
+## e.
+```{r}
+# Without transformation of the response:
+summary(butterfat.lm3) # Get results
+# Computing Tukey's HSD 95% Confidence Intervals:
+TukeyHSD(aov(Butterfat ~ Breed, butterfat))
+
+# With the log transformation of the response:
+summary(butterfat.lm4) # Get results
+# Computing Tukey's HSD 95% Confidence Intervals:
+TukeyHSD(aov(log(Butterfat) ~ Breed, butterfat))
+```
+
+In both cases (with and without transformation of the response), the best breed
+in terms of butterfat content is Jersey and the second best breed in terms of butterfat
+content is Guernsey. However in both cases, Jersey and Guernsey are not significantly
+different from each other because its pairwise difference has a corresponding confidence
+interval that contains 0 and also its corresponding p-value (large p-value) is greater
+than the 5% significance level (alpha = 0.05). Hence, the best breed in terms of
+butterfat content Jersey is not clearly superior to the second best breed Guernsey
+as they are not significantly different.
+
+# Q3.
+## a.
+```{r}
+# Getting data for only mature cows:
+butterfat.2 <- subset(butterfat, butterfat$Age == "Mature")
+
+# Creating boxplot of the data for only mature cows:
+plot(Butterfat ~ Breed, butterfat.2, xlab = "Breed", ylab = "Butterfat",
+     main = "Butterfat Content of Milk from 5 Different Breeds of Mature Cows")
+
+# Creating stripchart of the data of the data for only mature cows:
+stripchart(Butterfat ~ Breed, butterfat.2, vertical = TRUE, method = "stack",
+           xlab = "Breed", ylab = "Butterfat",
+           main = "Butterfat Content of Milk from 5 Different Breeds of Mature Cows")
+```
+
+Looking at the boxplots of the different breeds of mature cows, the Canadian breed
+has 2 outliers and the Holstein-Fresian has 1 outlier, whereas the other breeds
+(Ayrshire, Guernsey, and Jersey) have no outliers. The median for the Canadian breed
+is close to its upper quartile and the medians for the breeds Holstein-Fresian and
+Jersey are close to its lower quartile. There is positive skewness for the breeds
+Holstein-Fresian and Jersey, and somewhat for the breed Ayrshire. In addition, there
+is negative skewness for the breed Canadian. This suggests that there is a lack of
+normality in the data. Also, the equality of variance between the breeds does not
+seem to be satisfied. Hence, all together this suggests a transformation of the
+response might be needed. Ayrshire, Canadian, and Holstein-Fresian all have similar
+variation, whereas Guernsey and Jersey have similar variation.
+
+When looking at the stripchart there are ties in the data for the breeds Jersey,
+and Holstein-Fresian.
+
+## b.
+```{r}
+# Fitting linear model:
+butterfat.lm.2 <- lm(Butterfat ~ Breed, data = butterfat.2)
+summary(butterfat.lm.2) # Get results
+
+# ANOVA Test for a significant difference between the breeds (levels):
+anova(butterfat.lm.2) # same as anova(lm(Butterfat ~ Breed, data = butterfat.2))
+```
+
+The p-value obtained from the ANOVA test is 7.284e-14 (small p-value), which is
+less than the 5% significance level (alpha = 0.05) so I reject the null hypothesis
+that all breeds have equal mean butterfat and conclude that there is a significant
+difference between the breeds.
+
+## c.
+```{r}
+# Creating normal Q-Q plot of residuals:
+qqnorm(residuals(butterfat.lm.2))
+qqline(residuals(butterfat.lm.2)) # Adding Q-Q line
+
+# Creating residuals vs. fitted values plot:
+plot(jitter(fitted(butterfat.lm.2)), residuals(butterfat.lm.2), xlab = "Fitted",
+     ylab = "Residuals", main = "Residuals vs. Fitted Values")
+abline(h = 0) # Adding horizontal line at 0
+
+# Levene's test:
+median.butterfat <- with(butterfat.2, tapply(Butterfat, Breed, median)) # Computing medians
+# Computing absolute values of residuals
+ar.butterfat <- with(butterfat.2, abs(Butterfat - median.butterfat[Breed]))
+anova(lm(ar.butterfat ~ Breed, butterfat.2)) # Computing ANOVA test
+
+# Bartlett test:
+bartlett.test(Butterfat ~ Breed, butterfat.2)
+
+# Shapiro-Wilk normality test if the residuals are normal:
+shapiro.test(residuals(butterfat.lm.2))
+
+# Durbin-Watson test for correlated errors:
+dwtest(Butterfat ~ Breed, data = butterfat.2)
+```
+
+When looking at the normal Q-Q plot, most of the residuals approximately lie on
+the Q-Q line so therefore the residuals are approximately normal. In addition,
+in the residuals vs. fitted values plot the residuals seem to approximately form
+a horizontal band around the horizontal line at 0, which suggests that the error
+variances are homogeneous to one another.
+
+P-value from the Levene's test is 0.4415 (large p-value), which is greater than
+the 1% significance level (alpha = 0.01) so I conclude that there is no evidence
+of a non-constant variance (for the errors). This is also confirmed by the p-value
+from the Bartlett test as the p-value is large (p-value = 0.157). Hence, the assumption
+of constant variance is satisfied.
+
+Also, the p-value from the Shapiro-Wilk normality test is 0.05757 (large p-value),
+which is greater than the 5% significance level (alpha = 0.05) so therefore I do
+not reject the null hypothesis that the residuals are normal and conclude that
+there is strong evidence suggesting the residuals are normal. Hence, the normality
+assumption has been met.
+
+There is no symmetry in the residuals vs. fitted values plot, which suggests that
+the residuals are independent of one another. The p-value obtained from the
+Durbin-Watson test is 0.08027 (large p-value), which is greater than the 5%
+significance level (alpha = 0.05) so therefore I do not reject the null hypothesis
+that the errors are uncorrelated and conclude that the there is strong evidence
+of the errors being uncorrelated. Hence, the independence assumption is satisfied.
+
+All together this suggests that a transformation of the response is not needed.
+
+## d.
+```{r}
+# Computing Tukey's HSD 95% Confidence Intervals:
+tukey.CI <- TukeyHSD(aov(Butterfat ~ Breed, data = butterfat.2))
+tukey.CI # Get results
+
+# Tukey's HSD 95% Confidence Intervals Plot:
+plot(tukey.CI)
+```
+
+The pairwise differences that are not statistically significant are Canadian and
+Ayrshire, and Jersey and Guernsey because their corresponding confidence intervals
+contain 0. Also, this is because their corresponding p-values (p-values are large)
+are greater than the 5% significance level (alpha = 0.05). The rest of the pairwise
+difference are statistically significant, which are Guernsey and Ayrshire, Holstein-Fresian
+and Ayrshire, Jersey and Ayrshire, Guernsey and Canadian, Holstein-Fresian and Canadian,
+Jersey and Canadian, Holstein-Fresian and Guernsey, and Jersey and Holstein-Fresian.
+
+# Q4.
+## a.
+```{r}
+head(fortune) # To get a view of the data
+levels(fortune$region) # To see the levels of region
+fortune.2 <- na.omit(fortune) # Omitting observations that have NA values
+
+# Plotting the wealth as a function of age:
+plot(wealth ~ age, fortune.2, pch = unclass(region), xlab = "Age",
+     ylab = "Wealth (billions of $)",
+     main = "Wealth for Billionaires with different Ages in 5 Regions of the World")
+legend(4, 38, levels(fortune.2$region), pch = 1:5) # Adding a legend for the different regions
+```
+
+## b.
+```{r}
+# Plotting the wealth as a function of age with a separate panel for each region:
+ggplot(aes(x = age, y = wealth), data = fortune.2) +
+  geom_point() +
+  facet_wrap( ~ region) +
+  xlab("Age") +
+  ylab("Wealth (billions of $)") +
+  ggtitle("Wealth for Billionaires with different Ages for each of the 5 Regions of the World")
+```
+
+## c.
+```{r}
+# Fitting linear model:
+fortune.lm <- lm(wealth ~ age*region, data = fortune.2)
+summary(fortune.lm) # Get results
+
+# Creating residuals vs. fitted values plot:
+plot(residuals(fortune.lm) ~ fitted(fortune.lm), pch = unclass(fortune.2$region),
+     xlab = "Fitted Values", ylab = "Residuals", main = "Residuals vs. Fitted Values")
+abline(h = 0) # Adding horizontal line at 0
+legend(0.825, 33, levels(fortune.2$region), pch = 1:5) # Adding a legend for the different regions
+
+# Creating normal Q-Q plot of residuals:
+qqnorm(residuals(fortune.lm))
+qqline(residuals(fortune.lm)) # Adding Q-Q line
+
+# Looking at the plots there is non-constant variance that is unrelated to the 5 regions.
+# Hence, there is heteroscedasticity in the linear model.
+# Therefore, I will use a log transformation to remove the heteroscedasticity.
+
+# Fitting new linear model with log transformation of the response:
+fortune.lm2 <- lm(log(wealth) ~ age*region, data = fortune.2)
+summary(fortune.lm2) # Get results
+
+# Creating residuals vs. fitted values plot:
+plot(residuals(fortune.lm2) ~ fitted(fortune.lm2), pch = unclass(fortune.2$region),
+     xlab = "Fitted Values", ylab = "Residuals", main = "Residuals vs. Fitted Values")
+abline(h = 0) # Adding horizontal line at 0
+legend(0.27, 2.9, levels(fortune.2$region), pch = 1:5) # Adding a legend for the different regions
+
+# Creating normal Q-Q plot of residuals:
+qqnorm(residuals(fortune.lm2))
+qqline(residuals(fortune.lm2)) # Adding Q-Q line
+```
+
+A log transformation on the response can be used to facilitate linear modeling,
+as the log transformation removed most of the heteroscedasticity from looking at
+the Q-Q plot and residuals vs. fitted values plot.
+
+## d.
+```{r}
+summary(fortune.lm2) # Get results of linear model with log transformation of the response
+
+# Centering the Age Predictor by its mean value:
+fortune.2$center.age <- fortune.2$age - mean(fortune.2$age)
+
+# Fitting new linear model with Age centered by its mean value:
+fortune.lm2.center <- lm(log(wealth) ~ center.age*region, data = fortune.2)
+summary(fortune.lm2.center) # Get results
+```
+
+The Relationship of Age to Wealth (for each of the 5 regions):
+For a 1-unit increase in age (1-year older) there is an estimated average decrease
+of -0.001865 in wealth for region A (reference level).
+
+For a 1-unit increase in age (1-year older) there is an estimated average increase
+of 0.00162 (-0.001865 + 0.003485 = 0.00162) in wealth for region E.
+
+For a 1-unit increase in age (1-year older) there is an estimated average increase
+of 0.010355 (-0.001865 + 0.012220 = 0.010355) in wealth for region M.
+
+For a 1-unit increase in age (1-year older) there is an estimated average decrease
+of 0.004108 (-0.001865 - 0.002243 = -0.004108) in wealth for region O.
+
+For a 1-unit increase in age (1-year older) there is an estimated average increase
+of 0.001377 (-0.001865 + 0.003242 = 0.001377) in wealth for region U.
+
+The Relationship of Region to Wealth (for average age):
+The estimated average wealth for region A at average age is 0.798830.
+
+The estimated average wealth for region E at average age decreases by $0.143424
+billion and is 0.655406 billions of dollars (0.798830 - 0.143424 = 0.655406).
+
+The estimated average wealth for region M at average age increases by $0.067290
+billion and is 0.86612 billions of dollars (0.798830 + 0.067290 = 0.86612).
+
+The estimated average wealth for region O at average age decreases by $0.102863
+billion and is 0.695967 billions of dollars (0.798830 - 0.102863 = 0.695967).
+
+The estimated average wealth for region U at average age decreases by $0.024833
+billion and is 0.773997 billions of dollars (0.798830 - 0.024833 = 0.773997).
+
+## e.
+```{r}
+# Creating normal Q-Q plot of residuals:
+qqnorm(residuals(fortune.lm2))
+qqline(residuals(fortune.lm2)) # Adding Q-Q line
+
+# Creating residuals vs. fitted values plot:
+plot(residuals(fortune.lm2) ~ fitted(fortune.lm2), pch = unclass(fortune.2$region),
+     xlab = "Fitted Values", ylab = "Residuals", main = "Residuals vs. Fitted Values")
+abline(h = 0) # Adding horizontal line at 0
+legend(0.27, 2.9, levels(fortune.2$region), pch = 1:5) # Adding a legend for the different regions
+
+# Shapiro-Wilk normality test if the residuals are normal:
+shapiro.test(residuals(fortune.lm2))
+
+# Test for a difference in the variance:
+fortune.2$residuals <- sqrt(abs(residuals(fortune.lm2))) # Square-root of residuals
+fortune.lm.var <- lm(residuals ~ age*region, data = fortune.2) # Creating new linear model
+anova(fortune.lm.var) # ANOVA test
+
+# Durbin-Watson test for correlated errors:
+dwtest(log(wealth) ~ age*region, data = fortune.2)
+```
+
+When looking at the normal Q-Q plot, a lot of the residuals fall off the Q-Q line
+so therefore the residuals don't seem to be normal. Near the beginning of the plot
+and the end of the plot a lot of the residuals fall off the Q-Q line, which suggests
+the errors are long-tailed. Also, the p-value from the Shapiro-Wilk normality test
+is 3.374e-11 (small p-value), which is less than the 5% significance level (alpha = 0.05)
+so therefore I reject the null hypothesis that the residuals are normal and conclude
+that there is no strong evidence suggesting the residuals are normal. Hence, the
+normality assumption has not been satisfied.
+
+In addition, in the residuals vs. fitted values plot the residuals seem to be evenly
+spread out around the horizontal line at 0 and form a horizontal band around the
+horizontal line at 0, which suggests that the error variances are homogeneous to
+one another. In addition, the p-value from the ANOVA test for age is 0.4399, the
+p-value for region is 0.2152, and the p-value for the interaction term between age
+and region is 0.6563. All of these p-values are large, which allows for the conclusion
+that there is no strong evidence against of constant variance for both age, region,
+and the interaction term between age and region. Hence, the assumption of constant
+variance is satisfied.
+
+There is no symmetry in the residuals vs. fitted values plot, which suggests that
+the residuals are independent of one another. However, the p-value obtained from the
+Durbin-Watson test is <2.2e-16 (small p-value), which is less than the 5% significance
+level (alpha = 0.05) so therefore I do reject the null hypothesis that the errors
+are uncorrelated and conclude that the there is no strong evidence of the errors
+being uncorrelated. Hence, the independence assumption is not satisfied.
+
+Hence, maybe another transformation of the response should be used for the linear
+model to satisfy the normality and independence assumptions.
