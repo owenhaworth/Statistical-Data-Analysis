@@ -6,8 +6,7 @@ Welcome! This repository contains my Statistical Data Analysis assignment comple
 
 ## How to View
 
-Click the link below to open the HTML file via **GitHub Pages**.  
-No GitHub account is required — the HTML behaves like a standard webpage.
+Click the link below to open the HTML file via GitHub Pages. You do not need GitHub to view the files; they will open in your browser like a regular website.
 
 **→ _[Insert GitHub Pages link here]_**
 
