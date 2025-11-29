@@ -9,7 +9,7 @@ Welcome! This repository contains my Statistical Data Analysis assignment comple
 Click the link below to open the HTML file via **GitHub Pages**.  
 No GitHub account is required — the HTML behaves like a standard webpage.
 
-**→ [_View the full HTML report here_](https://owenhaworth.github.io/Statistical-Data-Analysis/Spatial-Data-Analysis.html)**
+**→ [_View the full HTML report here_](https://owenhaworth.github.io/Statistical-Data-Analysis/Statistical-Data-Analysis.html)**
 
 ---
 
